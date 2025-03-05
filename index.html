@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>真心话大冒险</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        #game-container {
+            width: 90vw;
+            height: calc(90vw * 16 / 9);
+            max-width: 360px;
+            max-height: 640px;
+            background-color: #fffdf0;
+            border: 2px solid #333;
+            border-radius: 10px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            box-sizing: border-box;
+            margin-top: -10vh; /* 上移10% */
+        }
+        #task-area {
+            width: 100%;
+            height: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 16px;
+            text-align: center;
+        }
+        #truth, #dare {
+            width: 90%;
+            height: 3em;
+            line-height: 1em;
+            padding: 5px;
+            border-radius: 10px;
+            background-color: #e0f7fa;
+            box-shadow: 3px 3px 5px #888, inset 2px 2px 3px #fff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: pre-wrap;
+        }
+        #truth.grey, #dare.grey {
+            filter: grayscale(100%);
+        }
+        #result {
+            width: 120px;
+            height: 40px;
+            background-color: #ccc;
+            border-radius: 10px;
+            box-shadow: 3px 3px 5px #888;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        #dice-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            height: 20%;
+            margin-top: 10px;
+        }
+        .dice {
+            width: 50px;
+            height: 50px;
+            background-color: #fffdf0;
+            border: 2px solid #000;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            position: absolute;
+        }
+        .dot.red {
+            background-color: red;
+        }
+        .dot.blue {
+            background-color: blue;
+        }
+        .one .dot { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .two .dot:nth-child(1) { top: 25%; left: 25%; }
+        .two .dot:nth-child(2) { bottom: 25%; right: 25%; }
+        .three .dot:nth-child(1) { top: 25%; left: 25%; }
+        .three .dot:nth-child(2) { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .three .dot:nth-child(3) { bottom: 25%; right: 25%; }
+        .four .dot:nth-child(1) { top: 25%; left: 25%; }
+        .four .dot:nth-child(2) { top: 25%; right: 25%; }
+        .four .dot:nth-child(3) { bottom: 25%; left: 25%; }
+        .four .dot:nth-child(4) { bottom: 25%; right: 25%; }
+        .five .dot:nth-child(1) { top: 25%; left: 25%; }
+        .five .dot:nth-child(2) { top: 25%; right: 25%; }
+        .five .dot:nth-child(3) { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .five .dot:nth-child(4) { bottom: 25%; left: 25%; }
+        .five .dot:nth-child(5) { bottom: 25%; right: 25%; }
+        .six .dot:nth-child(1) { top: 20%; left: 25%; }
+        .six .dot:nth-child(2) { top: 20%; right: 25%; }
+        .six .dot:nth-child(3) { top: 50%; left: 25%; transform: translateY(-50%); }
+        .six .dot:nth-child(4) { top: 50%; right: 25%; transform: translateY(-50%); }
+        .six .dot:nth-child(5) { bottom: 20%; left: 25%; }
+        .six .dot:nth-child(6) { bottom: 20%; right: 25%; }
+        .rolling {
+            animation: roll 0.133s infinite;
+        }
+        @keyframes roll {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(90deg) scale(0.8); }
+            50% { transform: rotate(180deg) scale(1.2); }
+            75% { transform: rotate(270deg) scale(0.8); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+        #button-area {
+            width: 100%;
+            height: 30%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            margin-bottom: 10px;
+        }
+        .buttons {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+        }
+        .button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            color: white;
+            font-size: 16px;
+            text-align: center;
+            line-height: 60px;
+            user-select: none;
+            box-shadow: 3px 3px 5px #888, inset 2px 2px 3px #fff;
+        }
+        #red-button {
+            background-color: #ff9999;
+        }
+        #blue-button {
+            background-color: #99ccff;
+        }
+        .locked {
+            filter: grayscale(100%);
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        #score-area {
+            display: flex;
+            justify-content: space-between;
+            width: 90%;
+            font-size: 14px;
+            text-align: center;
+        }
+        #dialog {
+            display: none;
+            position: fixed;
+            top: 41%; /* 上移2%（原43% - 2%） */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            z-index: 1000;
+            width: 70%;
+            max-width: 250px;
+        }
+        #dialog h3 {
+            font-size: 20px;
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        #dialog-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        #dialog-buttons button {
+            padding: 6px 15px;
+            cursor: pointer;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            background-color: #07c160;
+            color: white;
+        }
+        #dialog-buttons button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #dialog-buttons button:nth-child(2) {
+            background-color: #fff;
+            color: #07c160;
+            border: 1px solid #07c160;
+        }
+        #extra-buttons {
+            position: fixed;
+            bottom: 51px; /* 上移2%（原31px + 2% ≈ 20px，调整为51px） */
+            display: flex;
+            justify-content: space-around;
+            width: 90%;
+            max-width: 360px;
+        }
+        #extra-buttons button {
+            padding: 8px 15px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #ddd;
+            font-size: 14px;
+        }
+        #extra-buttons button:hover {
+            background-color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="task-area">
+            <div id="truth">真心话：</div>
+            <div id="dare">大冒险：</div>
+            <div id="result">平局</div>
+        </div>
+        <div id="dice-area">
+            <div id="red-dice" class="dice one"><div class="dot red"></div></div>
+            <div id="blue-dice" class="dice one"><div class="dot red"></div></div>
+        </div>
+        <div id="button-area">
+            <div class="buttons">
+                <button id="red-button" class="button">红方</button>
+                <button id="blue-button" class="button">蓝方</button>
+            </div>
+            <div id="score-area">
+                <div>
+                    <span id="red-score">获胜: 0</span><br>
+                    <span id="red-cheat">耍赖: 0</span>
+                </div>
+                <div>
+                    <span id="blue-score">获胜: 0</span><br>
+                    <span id="blue-cheat">耍赖: 0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="dialog">
+        <h3>等待执行中</h3>
+        <div id="dialog-buttons">
+            <button id="done-button">已执行</button>
+            <button id="cheat-button">耍赖</button>
+        </div>
+    </div>
+    <div id="extra-buttons">
+        <button id="shuffle-button">重新洗牌</button>
+        <button id="rules-button">游戏规则</button>
+        <button id="props-button">买点道具</button>
+    </div>
+
+    <script>
+        const truthList = [
+            "你第一次自慰是什么时候，用了什么工具？",
+            "你最想跟我尝试的性爱姿势是哪个，为什么？",
+            "你有没有在公共场合做过爱，最刺激的一次是哪次？",
+            "你最喜欢我身体的哪个部位，想怎么玩弄它？",
+            "你做过最下流的性幻想是什么，细节说清楚。",
+            "你有没有偷看过别人的性爱现场，感觉如何？",
+            "你最想撕掉我哪件衣服，用什么方式？",
+            "你有没有用过我的内裤自慰过，什么时候？",
+            "你最想让我对你做的变态事是什么？",
+            "你第一次高潮是什么感觉，具体描述一下。",
+            "你有没有嫉妒过我的前任，想过怎么报复？",
+            "你最喜欢哪种性爱玩具，想怎么用在我身上？",
+            "你有没有在梦里跟我做过爱，梦里是什么场景？",
+            "你最想在哪个公共场所跟我做爱，为什么？",
+            "你最羞耻的性经历是什么，讲出来。",
+            "你有没有偷偷闻过我的内衣，感觉怎么样？",
+            "你最想让我叫你什么性感昵称？",
+            "你最喜欢我的哪个性爱技巧，为什么？",
+            "你有没有一边想着我一边自慰过，具体怎么想的？",
+            "你最想让我对你说哪句下流话？",
+            "你最喜欢哪种前戏，想让我怎么做？",
+            "你有没有试过跟别人电话性爱，讲讲细节。",
+            "你最想让我穿哪件性感内衣，然后怎么脱掉？",
+            "你最喜欢哪种性爱声音，我该怎么叫？",
+            "你有没有因为我硬过/湿过，什么时候？",
+            "你最想跟我尝试的禁忌玩法是什么？",
+            "你有没有偷看过色情片，最喜欢哪一类？",
+            "你最想让我舔你哪里，为什么？",
+            "你有没有幻想过3P，对象是谁？",
+            "你最喜欢我身上哪种味道，想怎么享受？",
+            "你有没有在洗澡时自慰过，想着谁？",
+            "你最想跟我做的疯狂性爱地点是哪里？",
+            "你最喜欢哪种性爱节奏，快还是慢？",
+            "你有没有因为我穿某件衣服而硬过/湿过？",
+            "你最想让我对你用哪种性玩具？",
+            "你有没有试过角色扮演，最想演什么？",
+            "你最喜欢我吻你哪里，为什么？",
+            "你有没有幻想过被我绑起来，具体怎么玩？",
+            "你最想让我对你说哪句挑逗的话？",
+            "你有没有偷看过我的裸照，感觉如何？",
+            "你最喜欢哪种性爱体位，为什么？",
+            "你有没有因为我生气时觉得我更性感？",
+            "你最想跟我尝试的SM玩法是什么？",
+            "你有没有因为我而看色情片，哪部？",
+            "你最喜欢我哪个性感表情，想怎么回应？",
+            "你有没有试过在车里自慰，想ing谁？",
+            "你最想让我对你做的下流事是什么？",
+            "你有没有因为我的声音硬过/湿过？",
+            "你最喜欢我摸你哪里，怎么摸？",
+            "你有没有幻想过跟我公开做爱，哪里？",
+            "你最想让我对你用哪种性感语气说话？",
+            "你有没有因为我的某个动作而高潮过？",
+            "你最喜欢哪种性爱场景，想跟我拍一部？",
+            "你有没有偷用过我的东西自慰？",
+            "你最想跟我尝试的性爱时间是多久？",
+            "你有没有因为我的味道而兴奋过？",
+            "你最喜欢我哪个性爱习惯，为什么？",
+            "你有没有幻想过我在你面前脱光？",
+            "你最想让我对你做的羞耻玩法是什么？",
+            "你有没有因为我而买过性玩具？",
+            "你最喜欢哪种性爱高潮方式，为什么？",
+            "你有没有偷听过我洗澡的声音？",
+            "你最想跟我尝试的性爱地点是哪里？",
+            "你有没有因为我的眼神而硬过/湿过？",
+            "你最喜欢我叫床的哪句，模仿给我听。",
+            "你有没有幻想过跟我玩多人游戏？",
+            "你最想让我对你做的挑逗动作是什么？",
+            "你有没有因为我的某个部位而自慰过？",
+            "你最喜欢哪种性爱前戏，想怎么玩？",
+            "你有没有偷看过我的隐私部位？",
+            "你最想跟我尝试的性爱挑战是什么？",
+            "你有没有因为我生气时想跟我做爱？",
+            "你最喜欢我哪个性感动作，描述一下。",
+            "你有没有幻想过我在别人面前脱给你看？",
+            "你最想让我对你用的性感昵称是什么？",
+            "你有没有因为我的笑声而硬过/湿过？",
+            "你最喜欢哪种性爱结束方式，为什么？",
+            "你有没有偷闻过我的衣服，哪件？",
+            "你最想跟我尝试的性爱道具是什么？",
+            "你有没有因为我的某个动作而高潮过？",
+            "你最喜欢我哪个性爱表情，想怎么回应？",
+            "你有没有试过跟我视频性爱，感觉如何？",
+            "你最想让我对你做的羞耻事是什么？",
+            "你有没有因为我的吻而硬过/湿过？",
+            "你最喜欢哪种性爱灯光，想怎么布置？",
+            "你有没有偷看过我的性感照片？",
+            "你最想跟我尝试的性爱音乐是什么？",
+            "你有没有因为我的某个习惯而兴奋过？",
+            "你最喜欢我哪个性爱声音，想怎么模仿？",
+            "你有没有幻想过我在浴室里对你做坏事？",
+            "你最想让我对你做的变态玩法是什么？",
+            "你有没有因为我的身体而买色情片？",
+            "你最喜欢哪种性爱触感，为什么？",
+            "你有没有偷摸过我的身体，什么时候？",
+            "你最想跟我尝试的性爱冒险是什么？",
+            "你有没有因为我的某个动作而硬过/湿过？",
+            "你最喜欢我哪个性爱姿势，为什么？",
+            "你有没有幻想过我在公众面前挑逗你？",
+            "你最想让我对你说的下流情话是什么？",
+            "你有没有因为我而试过新的性爱方式？"
+        ];
+
+        const dareList = [
+            "脱光衣服，在我面前跳一段性感舞。",
+            "用舌头舔我的耳朵，持续30秒。",
+            "在我身上涂满巧克力酱，然后舔干净。",
+            "给我做一次全身按摩，只用嘴。",
+            "穿上我的内衣，在房间里走一圈。",
+            "用手指在我身上画爱心，从头到脚。",
+            "蒙上眼睛，让我对你做任何事5分钟。",
+            "在我面前自慰，直到高潮。",
+            "用冰块在我身上滑动，直到融化。",
+            "给我拍一张你的裸照，发给我。",
+            "在我身上写下最下流的话，然后读出来。",
+            "模仿色情片里的叫声，持续1分钟。",
+            "用我的内裤蒙住你的脸，闻30秒。",
+            "在我面前脱衣服，每件脱得慢一点。",
+            "让我绑住你的手，然后挑逗你5分钟。",
+            "用牙齿解开我的裤子拉链。",
+            "在我身上撒满玫瑰花瓣，然后亲遍。",
+            "给我做一个性感的脱衣舞表演。",
+            "用舌头舔我的手指，像舔别的东西一样。",
+            "在我面前摆出10个体位，每种坚持10秒。",
+            "让我在你身上涂满油，然后滑来滑去。",
+            "用嘴帮我脱掉一件衣服。",
+            "在我耳边说10句下流情话，越大声越好。",
+            "让我用鞭子轻轻抽你10下。",
+            "在我身上跳一段裸体舞，持续2分钟。",
+            "用我的胸部当枕头睡1分钟。",
+            "让我在你身上滴蜡，然后舔掉。",
+            "在我面前玩弄自己最敏感的部位。",
+            "用舌头在我身上写下“我爱你”。",
+            "让我蒙住你的眼睛，然后亲你全身。",
+            "在我面前模仿高潮表情，持续30秒。",
+            "用我的脚帮你按摩敏感部位。",
+            "在我身上涂满蜂蜜，然后舔干净。",
+            "让我用冰块挑逗你的私处。",
+            "在我面前展示你的性玩具怎么用。",
+            "用嘴帮我脱掉内裤。",
+            "在我身上画满吻痕。",
+            "让我用绳子绑住你，然后亲你5分钟。",
+            "在我面前跳一段色情舞蹈。",
+            "用舌头舔我的脖子，直到我叫停。",
+            "让我在你身上涂满奶油，然后吃掉。",
+            "在我面前脱光，摆出最性感的姿势。",
+            "用我的手帮你自慰1分钟。",
+            "在我身上洒满酒，然后舔干净。",
+            "让我用牙齿咬你的敏感部位。",
+            "在我面前表演一场色情独角戏。",
+            "用舌头在我身上画圈，从头到脚。",
+            "让我在你身上滴满热蜡。",
+            "在我面前大声喊出你最下流的性幻想。",
+            "用我的腿夹住你的脸，持续30秒。",
+            "在我身上涂满果酱，然后舔干净。",
+            "让我用手指挑逗你的私处。",
+            "在我面前模仿色情片的场景。",
+            "用嘴帮我解开bra。",
+            "在我身上留下10个咬痕。",
+            "让我用冰块在你身上写字。",
+            "在我面前展示你最色情的表情。",
+            "用舌头舔我的脚趾，持续30秒。",
+            "让我在你身上涂满润滑油，然后滑来滑去。",
+            "在我面前脱光，摆出最羞耻的姿势。",
+            "用我的胸部帮你按摩脸。",
+            "在我身上撒满糖粉，然后舔干净。",
+            "让我用鞭子抽你的屁股10下。",
+            "在我面前表演一次高潮。",
+            "用舌头在我身上写下你的名字。",
+            "让我在你身上涂满巧克力，然后吃掉。",
+            "在我面前跳一段裸体扭臀舞。",
+            "用嘴帮我脱掉袜子。",
+            "在我身上留下20个吻痕。",
+            "让我用绳子绑住你的脚，然后挑逗你。",
+            "在我面前模仿色情片的呻吟。",
+            "用我的手挑逗你的敏感部位。",
+            "在我身上摸满奶油，然后舔干净。",
+            "让我用冰块在你身上画爱心。",
+            "在我面前展示你最下流的动作。",
+            "用舌头舔我的嘴唇，持续30秒。",
+            "让我在你身上滴满蜂蜜。",
+            "在我面前表演一次色情脱衣秀。",
+            "用我的脚帮你按摩全身。",
+            "在我身上写下最色情的话。",
+            "让我用牙齿咬你的耳朵。",
+            "在我面前跳一段裸体舞，持续3分钟。",
+            "用舌头在我身上画出性感图案。",
+            "让我在你身上涂满果酱，然后舔掉。",
+            "在我面前大声喊出你的性幻想。",
+            "用我的腿帮你按摩敏感部位。",
+            "在我身上撒满酒精，然后舔干净。",
+            "让我用鞭子轻轻抽你的胸。",
+            "在我面前表演一次色情自慰秀。",
+            "用舌头舔我的肚脐，持续30秒。",
+            "让我在你身上涂满润滑油，然后玩滑梯。",
+            "在我面前摆出最色情的姿势。",
+            "用我的胸部帮你按摩背。",
+            "在我身上涂满糖浆，然后舔干净。",
+            "让我用冰块挑逗你的全身。",
+            "在我面前模仿色情片的高潮叫声。",
+            "用舌头在我身上写下“操我”。",
+            "让我在你身上滴满热油。",
+            "在我面前跳一段裸体挑逗舞。",
+            "用我的身体当画布，涂满任何东西。"
+        ];
+
+        const redButton = document.getElementById('red-button');
+        const blueButton = document.getElementById('blue-button');
+        const redDice = document.getElementById('red-dice');
+        const blueDice = document.getElementById('blue-dice');
+        const truth = document.getElementById('truth');
+        const dare = document.getElementById('dare');
+        const result = document.getElementById('result');
+        const redScore = document.getElementById('red-score');
+        const blueScore = document.getElementById('blue-score');
+        const redCheat = document.getElementById('red-cheat');
+        const blueCheat = document.getElementById('blue-cheat');
+        const dialog = document.getElementById('dialog');
+        const doneButton = document.getElementById('done-button');
+        const cheatButton = document.getElementById('cheat-button');
+        const shuffleButton = document.getElementById('shuffle-button');
+        const rulesButton = document.getElementById('rules-button');
+        const propsButton = document.getElementById('props-button');
+        let redRoll = 0;
+        let blueRoll = 0;
+        let redWins = 0;
+        let blueWins = 0;
+        let redCheats = 0;
+        let blueCheats = 0;
+        let gameState = 'start';
+        let currentTask = null;
+        let usedTruths = [];
+        let usedDares = [];
+        let redClicked = false;
+        let blueClicked = false;
+
+        function rollDice() {
+            return Math.floor(Math.random() * 6) + 1;
+        }
+
+        function updateDice(dice, number) {
+            dice.className = 'dice';
+            dice.innerHTML = '';
+            const colors = [1, 4, 6].includes(number) ? 'red' : 'blue';
+            const dots = {
+                1: ['dot'],
+                2: ['dot', 'dot'],
+                3: ['dot', 'dot', 'dot'],
+                4: ['dot', 'dot', 'dot', 'dot'],
+                5: ['dot', 'dot', 'dot', 'dot', 'dot'],
+                6: ['dot', 'dot', 'dot', 'dot', 'dot', 'dot']
+            }[number];
+            dice.classList.add(['one', 'two', 'three', 'four', 'five', 'six'][number - 1]);
+            dots.forEach(() => {
+                const dot = document.createElement('div');
+                dot.classList.add('dot', colors);
+                dice.appendChild(dot);
+            });
+        }
+
+        function resetGame() {
+            // 完全重置游戏，包括分数和作弊次数
+            gameState = 'start';
+            redButton.classList.remove('locked');
+            blueButton.classList.remove('locked');
+            truth.textContent = '真心话：';
+            dare.textContent = '大冒险：';
+            truth.classList.remove('grey');
+            dare.classList.remove('grey');
+            result.textContent = '平局';
+            result.style.color = 'black';
+            dialog.style.display = 'none';
+            cheatButton.disabled = false;
+            currentTask = null;
+            redRoll = 0;
+            blueRoll = 0;
+            redClicked = false;
+            blueClicked = false;
+            redWins = 0;
+            blueWins = 0;
+            redCheats = 0;
+            blueCheats = 0;
+            usedTruths = [];
+            usedDares = [];
+            redScore.textContent = `获胜: ${redWins}`;
+            blueScore.textContent = `获胜: ${blueWins}`;
+            redCheat.textContent = `耍赖: ${redCheats}`;
+            blueCheat.textContent = `耍赖: ${blueCheats}`;
+        }
+
+        function startNewRound() {
+            // 开始新一轮，保留分数和作弊次数
+            gameState = 'start';
+            redButton.classList.remove('locked');
+            blueButton.classList.remove('locked');
+            truth.textContent = '真心话：';
+            dare.textContent = '大冒险：';
+            truth.classList.remove('grey');
+            dare.classList.remove('grey');
+            result.textContent = '平局';
+            result.style.color = 'black';
+            dialog.style.display = 'none';
+            cheatButton.disabled = false;
+            currentTask = null;
+            redRoll = 0;
+            blueRoll = 0;
+            redClicked = false;
+            blueClicked = false;
+            redScore.textContent = `获胜: ${redWins}`;
+            blueScore.textContent = `获胜: ${blueWins}`;
+            redCheat.textContent = `耍赖: ${redCheats}`;
+            blueCheat.textContent = `耍赖: ${blueCheats}`;
+        }
+
+        function showRandomTask() {
+            const isTruth = Math.random() < 0.5;
+            currentTask = isTruth ? 'truth' : 'dare';
+            const list = isTruth ? truthList : dareList;
+            const usedList = isTruth ? usedTruths : usedDares;
+            const available = list.filter(item => !usedList.includes(item));
+            if (available.length === 0) {
+                resetGame(); // 内容用尽后重启游戏
+                return showRandomTask(); // 重新选择
+            }
+            const index = Math.floor(Math.random() * available.length);
+            const task = available[index];
+            usedList.push(task);
+            if (isTruth) {
+                truth.textContent = '真心话：' + task;
+                dare.textContent = '大冒险：';
+            } else {
+                dare.textContent = '大冒险：' + task;
+                truth.textContent = '真心话：';
+            }
+        }
+
+        function showResult() {
+            if (redRoll === blueRoll) {
+                result.textContent = '平局';
+                result.style.color = 'black';
+                setTimeout(() => startNewRound(), 1000); // 平局自动结束，不弹窗
+            } else if (redRoll > blueRoll) {
+                result.textContent = '红方获胜';
+                result.style.color = 'red';
+                redWins++;
+                redScore.textContent = `获胜: ${redWins}`;
+                showRandomTask();
+                setTimeout(() => dialog.style.display = 'block', 1000); // 延迟1秒显示弹框
+            } else {
+                result.textContent = '蓝方获胜';
+                result.style.color = 'blue';
+                blueWins++;
+                blueScore.textContent = `获胜: ${blueWins}`;
+                showRandomTask();
+                setTimeout(() => dialog.style.display = 'block', 1000); // 延迟1秒显示弹框
+            }
+        }
+
+        redButton.addEventListener('click', () => {
+            if (gameState === 'start' && !redClicked) {
+                redClicked = true;
+                redButton.classList.add('locked');
+                if (blueClicked) {
+                    redDice.classList.add('rolling');
+                    blueDice.classList.add('rolling');
+                    setTimeout(() => {
+                        redRoll = rollDice();
+                        blueRoll = rollDice();
+                        updateDice(redDice, redRoll);
+                        updateDice(blueDice, blueRoll);
+                        redDice.classList.remove('rolling');
+                        blueDice.classList.remove('rolling');
+                        gameState = 'result';
+                        showResult();
+                    }, 1000);
+                }
+            }
+        });
+
+        blueButton.addEventListener('click', () => {
+            if (gameState === 'start' && !blueClicked) {
+                blueClicked = true;
+                blueButton.classList.add('locked');
+                if (redClicked) {
+                    redDice.classList.add('rolling');
+                    blueDice.classList.add('rolling');
+                    setTimeout(() => {
+                        redRoll = rollDice();
+                        blueRoll = rollDice();
+                        updateDice(redDice, redRoll);
+                        updateDice(blueDice, blueRoll);
+                        redDice.classList.remove('rolling');
+                        blueDice.classList.remove('rolling');
+                        gameState = 'result';
+                        showResult();
+                    }, 1000);
+                }
+            }
+        });
+
+        doneButton.addEventListener('click', () => {
+            startNewRound(); // 点击“已执行”开始新一轮
+        });
+
+        cheatButton.addEventListener('click', () => {
+            if (currentTask === 'truth') {
+                truth.classList.add('grey');
+                const availableDares = dareList.filter(item => !usedDares.includes(item));
+                if (availableDares.length === 0) {
+                    resetGame();
+                    return showRandomTask();
+                }
+                const dareIndex = Math.floor(Math.random() * availableDares.length);
+                const task = availableDares[dareIndex];
+                usedDares.push(task);
+                dare.textContent = '大冒险：' + task;
+            } else {
+                dare.classList.add('grey');
+                const availableTruths = truthList.filter(item => !usedTruths.includes(item));
+                if (availableTruths.length === 0) {
+                    resetGame();
+                    return showRandomTask();
+                }
+                const truthIndex = Math.floor(Math.random() * availableTruths.length);
+                const task = availableTruths[truthIndex];
+                usedTruths.push(task);
+                truth.textContent = '真心话：' + task;
+            }
+            if (redRoll > blueRoll) {
+                blueCheats++;
+                blueCheat.textContent = `耍赖: ${blueCheats}`;
+            } else if (blueRoll > redRoll) {
+                redCheats++;
+                redCheat.textContent = `耍赖: ${redCheats}`;
+            }
+            cheatButton.disabled = true;
+        });
+
+        shuffleButton.addEventListener('click', () => {
+            resetGame(); // 点击“重新洗牌”完全重置
+        });
+
+        rulesButton.addEventListener('click', () => {
+            const rules = "游戏规则：\n1. 双方轮流点击红方或蓝方按钮。\n2. 单独点击不触发骰子跳动，需两个按钮都点击后，骰子同时跳动。\n3. 点数大的一方获胜，平局自动结束并重新开始。\n4. 获胜后随机显示真心话或大冒险。\n5. 可选择执行或耍赖，耍赖后当前任务变灰并显示另一项。\n6. 点击“重新洗牌”重置游戏，“买点道具”跳转购买页面。";
+            alert(rules);
+        });
+
+        propsButton.addEventListener('click', () => {
+            window.location.href = "http://www.thisnet.cn/wxurl/mini.php";
+        });
+
+        // 初始化游戏
+        updateDice(redDice, 1);
+        updateDice(blueDice, 1);
+        redRoll = 0;
+        blueRoll = 0;
+    </script>
+</body>
+</html>
