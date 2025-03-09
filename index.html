@@ -414,7 +414,6 @@
             ageVerifyMask.style.display = 'none';
             gameContainer.style.display = 'block';
             extraButtons.style.display = 'flex';
-            localStorage.setItem('ageVerified', 'true'); // 设置验证标记
         });
 
         document.getElementById('underage-btn').addEventListener('click', () => {
@@ -424,12 +423,6 @@
                 window.close();
             }, 500);
         });
-
-        // 检查本地存储（可选功能）
-        if(localStorage.getItem('ageVerified') === 'true') {
-            ageVerifyMask.style.display = 'none';
-            gameContainer.style.display = 'block';
-            extraButtons.style.display = 'flex';
         }
 
          const truthList = [
